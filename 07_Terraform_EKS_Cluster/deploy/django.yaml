@@ -23,7 +23,7 @@ kind: Service
 metadata:
   name: django-proxy-service
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: django
     tier: proxy
