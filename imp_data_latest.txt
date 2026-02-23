@@ -1,0 +1,74 @@
+
+https://github.com/stacksimplify/devops-real-world-project-implementation-on-aws
+
+Account ID
+8373-1811-4635
+Account name
+maheshnew ghagareMM@1249
+
+aws eks --region us-east-1 update-kubeconfig --name retail-dev-eksdemo1
+kubectl get nodes
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+---------------------------------------------------------------
+
+aws-vault exec mahesh.demo --duration=8h
+------------------------------------------------------------------
+Console sign-in URL
+
+https://837318114635.signin.aws.amazon.com/console
+User name devops_admin
+Console password ghagareMM@1249
+
+
+
+-----------------------------------------------------
+
+https://d-906601fee8.awsapps.com/start/#/?tab=accounts
+
+mahesh.demo
+
+--------------------------------------------------------------
+
+
+helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver/
+
+
+helm upgrade -i aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver \
+    --namespace kube-system \
+    --set image.repository=602401143452.dkr.ecr.eu-west-2.amazonaws.com/eks/aws-efs-csi-driver \
+    --set controller.serviceAccount.create=true \
+    --set controller.serviceAccount.name=efs-csi-controller-sa \
+    --set "controller.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"=arn:aws:iam::837318114635:role/django-k8s-efs-csi20260210181416530700000002
+
+
+----------------------------------------------------------------------------
+
+
+cluster_name = "django-k8s-cluster"
+db_instance_address = "django-k8s-db.cds6uq02q0t2.eu-west-2.rds.amazonaws.com"
+ecr_app_url = "837318114635.dkr.ecr.eu-west-2.amazonaws.com/django-k8s-app"
+ecr_proxy_url = "837318114635.dkr.ecr.eu-west-2.amazonaws.com/django-k8s-proxy"
+efs_csi_sa_role = "arn:aws:iam::837318114635:role/django-k8s-efs-csi20260210181416530700000002"
+efs_id = "fs-0b4a8b3b24085a86b"
+region = "eu-west-2"
+
+
+--------------------------------------------------------------------------------------------
+
+
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 837318114635.dkr.ecr.us-east-1.amazonaws.com
+
+
+
+docker build -t 837318114635.dkr.ecr.us-east-1.amazonaws.com/app:latest  --compress .
+docker push 837318114635.dkr.ecr.us-east-1.amazonaws.com/app:latest
+
+
+docker build -t 837318114635.dkr.ecr.us-east-1.amazonaws.com/proxy:latest  --compress proxy/
+docker push 837318114635.dkr.ecr.us-east-1.amazonaws.com/proxy:latest
+
+
+
+imp_data_latest.txt
+*.txt
+.env

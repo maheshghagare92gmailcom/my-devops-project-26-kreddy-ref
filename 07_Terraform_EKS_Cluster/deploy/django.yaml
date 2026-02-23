@@ -1,0 +1,157 @@
+# =========================
+# DJANGO APP SERVICE (Internal)
+# =========================
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-app-service
+spec:
+  type: ClusterIP
+  selector:
+    app: django
+    tier: app
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+---
+# =========================
+# PROXY SERVICE (External Entry)
+# =========================
+apiVersion: v1
+kind: Service
+metadata:
+  name: django-proxy-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: django
+    tier: proxy
+  ports:
+    - port: 80
+      targetPort: 8000
+
+---
+# =========================
+# SHARED STORAGE (EFS)
+# =========================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: django-app-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# =========================
+# DJANGO APP DEPLOYMENT
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: django
+        tier: app
+    spec:
+      serviceAccountName: catalog
+      volumes:
+        - name: django-storage
+          persistentVolumeClaim:
+            claimName: django-app-pvc
+
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: django-db-secret
+      
+      containers:
+        - name: app
+          image: 837318114635.dkr.ecr.us-east-1.amazonaws.com/app:latest
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: django-storage
+              mountPath: /vol/web
+            - name: secrets-store
+              mountPath: "/mnt/secrets"
+              readOnly: true
+          env:
+            - name: DB_HOST
+              value: "mydb3.c4rmigmqaal0.us-east-1.rds.amazonaws.com" # Change this to your RDS endpoint
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: django-aws-secret
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: django-aws-secret
+                  key: DB_USER
+            - name: ALLOWED_HOSTS
+              value: "*"
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: django-aws-secret
+                  key: DB_PASS
+            - name: SECRET_KEY  
+              valueFrom:
+                secretKeyRef:
+                  name: django-aws-secret
+                  key: SECRET_KEY
+
+---
+# =========================
+# NGINX PROXY DEPLOYMENT
+# =========================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+      tier: proxy
+  template:
+    metadata:
+      labels:
+        app: django
+        tier: proxy
+    spec:
+      volumes:
+        - name: django-storage
+          persistentVolumeClaim:
+            claimName: django-app-pvc
+
+      containers:
+        - name: proxy
+          image: 837318114635.dkr.ecr.us-east-1.amazonaws.com/proxy:latest
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: django-storage
+              mountPath: /vol/web
+          env:
+            - name: APP_HOST
+              value: "django-app-service"
+            - name: APP_PORT
+              value: "8080"

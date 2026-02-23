@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: catalog
+  annotations:
+     eks.amazonaws.com/role-arn: arn:aws:iam::837318114635:role/retail-dev-eksdemo1-myapp-secrets 
