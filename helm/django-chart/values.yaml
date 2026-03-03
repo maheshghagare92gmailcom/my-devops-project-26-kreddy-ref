@@ -1,0 +1,123 @@
+# =========================
+# App
+# =========================
+app:
+  name: django
+
+# =========================
+# Deployments
+# =========================
+deployments:
+  app:
+    enabled: true
+    name: django-app
+    replicas: 1
+    image: 837318114635.dkr.ecr.us-east-1.amazonaws.com/app:latest
+    containerPort: 8080
+    serviceAccount: catalog
+  proxy:
+    enabled: true
+    name: django-proxy
+    replicas: 1
+    image: 837318114635.dkr.ecr.us-east-1.amazonaws.com/proxy:latest
+    containerPort: 8000
+    appHost: django-app-service
+    appPort: "8080"
+
+# =========================
+# Services
+# =========================
+services:
+  app:
+    enabled: true
+    name: django-app-service
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  proxy:
+    enabled: true
+    name: django-proxy-service
+    type: ClusterIP
+    port: 80
+    targetPort: 8000
+
+service:
+  proxyPort: 80
+
+# =========================
+# Ingress
+# =========================
+ingress:
+  enabled: true
+  host: app.mahesh1249.store
+  certificateArn: arn:aws:acm:us-east-1:837318114635:certificate/63b16889-8a6a-4022-b239-e9395fb227dc
+
+# =========================
+# PVC / Storage
+# =========================
+pvc:
+  enabled: true
+  name: django-app-pvc
+  storageClassName: efs-sc
+  storage: 5Gi
+  accessMode: ReadWriteMany
+
+efs:
+  fileSystemId: fs-07e960e09fa024f4a
+
+# =========================
+# Secrets (AWS Secrets Manager)
+# =========================
+secrets:
+  enabled: true
+  name: django-db-secret
+  namespace: default
+  provider: aws
+  region: us-east-1
+  secretName: django-aws-secret
+  objects:
+    - objectName: "django-db-secret"
+      objectType: "secretsmanager"
+      jmesPath:
+        - path: DB_USER
+          objectAlias: DB_USER
+        - path: DB_PASS
+          objectAlias: DB_PASS
+        - path: DB_NAME
+          objectAlias: DB_NAME
+        - path: SECRET_KEY
+          objectAlias: SECRET_KEY
+  secretObjects:
+    - secretName: django-aws-secret
+      type: Opaque
+      data:
+        - objectName: DB_USER
+          key: DB_USER
+        - objectName: DB_PASS
+          key: DB_PASS
+        - objectName: DB_NAME
+          key: DB_NAME
+        - objectName: SECRET_KEY
+          key: SECRET_KEY
+
+# =========================
+# DB
+# =========================
+db:
+  host: mydb3.c4rmigmqaal0.us-east-1.rds.amazonaws.com
+
+# =========================
+# IAM Role for ServiceAccount
+# =========================
+iam:
+  roleArn: arn:aws:iam::837318114635:role/retail-dev-eksdemo1-myapp-secrets
+
+# =========================
+# Persistent Volume Claim (PVC) for shared storage
+# =========================
+pvc:
+  enabled: true
+  name: django-app-pvc           # PVC name
+  accessMode: ReadWriteMany      # Access mode
+  storageClassName: efs-sc       # Storage class
+  storage: 5Gi                   # Requested storage

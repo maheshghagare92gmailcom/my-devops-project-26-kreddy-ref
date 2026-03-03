@@ -1,3 +1,4 @@
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -6,20 +7,20 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:837318114635:certificate/63b16889-8a6a-4022-b239-e9395fb227dc
+    alb.ingress.kubernetes.io/certificate-arn: {{ .Values.ingress.certificateArn }}
     alb.ingress.kubernetes.io/ssl-redirect: "443"
-    external-dns.alpha.kubernetes.io/hostname: app.mahesh1249.store
+    external-dns.alpha.kubernetes.io/hostname: {{ .Values.ingress.host }}
 spec:
   ingressClassName: alb
   rules:
-    - host: app.mahesh1249.store
+    - host: {{ .Values.ingress.host }}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: django-proxy-service
+                name: {{ .Values.services.proxy.name }}
                 port:
-                  number: 80
- 
+                  number: {{ .Values.service.proxyPort }}
+{{- end }}

@@ -1,3 +1,5 @@
+terraform apply -auto-approve
+terraform destroy -auto-approve
 
 https://github.com/stacksimplify/devops-real-world-project-implementation-on-aws
 
@@ -9,6 +11,9 @@ maheshnew ghagareMM@1249
 aws eks --region us-east-1 update-kubeconfig --name retail-dev-eksdemo1
 kubectl get nodes
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+
+
+  hithub token
 ---------------------------------------------------------------
 
 aws-vault exec mahesh.demo --duration=8h

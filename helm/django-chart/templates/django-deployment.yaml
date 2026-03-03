@@ -1,0 +1,65 @@
+{{- if .Values.deployments.app.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployments.app.name }}
+spec:
+  replicas: {{ .Values.deployments.app.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+      tier: app
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+        tier: app
+    spec:
+      serviceAccountName: {{ .Values.deployments.app.serviceAccount }}
+      volumes:
+        - name: django-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.pvc.name }}
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secrets.name }}
+      containers:
+        - name: app
+          image: {{ .Values.deployments.app.image }}
+          ports:
+            - containerPort: {{ .Values.deployments.app.containerPort }}
+          volumeMounts:
+            - name: django-storage
+              mountPath: /vol/web
+            - name: secrets-store
+              mountPath: /mnt/secrets
+              readOnly: true
+          env:
+            - name: DB_HOST
+              value: {{ .Values.db.host | quote }}
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: DB_USER
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: DB_PASS
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.secretName }}
+                  key: SECRET_KEY
+            - name: ALLOWED_HOSTS
+              value: "*"
+{{- end }}

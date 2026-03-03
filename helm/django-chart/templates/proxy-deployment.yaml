@@ -1,0 +1,35 @@
+{{- if .Values.deployments.proxy.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployments.proxy.name }}
+spec:
+  replicas: {{ .Values.deployments.proxy.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+      tier: proxy
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+        tier: proxy
+    spec:
+      volumes:
+        - name: django-storage
+          persistentVolumeClaim:
+            claimName: {{ .Values.pvc.name }}
+      containers:
+        - name: proxy
+          image: {{ .Values.deployments.proxy.image }}
+          ports:
+            - containerPort: {{ .Values.deployments.proxy.containerPort }}
+          volumeMounts:
+            - name: django-storage
+              mountPath: /vol/web
+          env:
+            - name: APP_HOST
+              value: {{ .Values.deployments.proxy.appHost | quote }}
+            - name: APP_PORT
+              value: {{ .Values.deployments.proxy.appPort | quote }}
+{{- end }}

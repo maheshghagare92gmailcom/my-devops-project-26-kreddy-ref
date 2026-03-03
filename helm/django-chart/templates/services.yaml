@@ -1,0 +1,31 @@
+{{- if .Values.services.app.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.services.app.name }}
+spec:
+  type: {{ .Values.services.app.type }}
+  selector:
+    app: {{ .Values.app.name }}
+    tier: app
+  ports:
+    - port: {{ .Values.services.app.port }}
+      targetPort: {{ .Values.services.app.targetPort }}
+{{- end }}
+
+---
+
+{{- if .Values.services.proxy.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.services.proxy.name }}
+spec:
+  type: {{ .Values.services.proxy.type }}
+  selector:
+    app: {{ .Values.app.name }}
+    tier: proxy
+  ports:
+    - port: {{ .Values.services.proxy.port }}
+      targetPort: {{ .Values.services.proxy.targetPort }}
+{{- end }}
